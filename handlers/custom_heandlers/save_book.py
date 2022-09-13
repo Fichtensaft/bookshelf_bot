@@ -1,51 +1,64 @@
-import pathlib
+import sqlite3
 
 from loader import bot
 from states.save_book_states import SaveBookState
 from telebot.types import Message
+from keyboards.inline.save_add_info import req_yes_no
 
 
-@bot.message_handler(commands=['bubba'])
-def test_bubba(message: Message) -> None:
-    bot.send_message(chat_id=message.chat.id, text='Bubba works!')
-
-
-"""A .txt doc for saving (before learning SQL)"""
-SAVE_DOC_NAME = 'C:\\Me\\Coding_Python\\Projects\\Bookshelf_Bot\\utils\\read_books.txt'
+path_db = 'C:\\Me\\Coding_Python\\Projects\\Bookshelf_Bot\\database\\bookshelf.db'
+conn = sqlite3.connect(path_db, check_same_thread=False)
+c = conn.cursor()
 
 
 @bot.message_handler(state=SaveBookState.book_name)
 def book_name_next(message: Message) -> None:
-    """Saving book name in database (file) and asking - should we proceed with extra information to save"""
+    """Saving book name in database (SQLite) and asking - should we proceed with extra information to save"""
 
-    # user_dict = {message.from_user.id: []}
+    last_id = c.execute("""SELECT * FROM read_books ORDER BY rowid DESC""")
+    if not c.fetchall():
+        book_title_insertion = "INSERT INTO read_books (title) VALUES (?)"
+        title_name = (message.text, )
+        c.execute(book_title_insertion, title_name)
+        conn.commit()
+    else:
+        book_title_insertion = "INSERT INTO read_books (title) VALUES (?)"
+        title_name = (message.text, )
+        c.execute(book_title_insertion, title_name)
+        conn.commit()
 
-    with open(SAVE_DOC_NAME, 'a+', encoding='utf-8') as book_data:
-        # if user_dict in book_data:
-        #     user_dict[message.from_user.id].append(message.text)
-        # else:
-        #     user_dict[message.from_user.id] = [message.text]
-
-        book_data.write(f"{message.text}\n")
-
-    bot.set_state(user_id=message.from_user.id, state=SaveBookState.is_commentary, chat_id=message.chat.id)
-    bot.send_message(chat_id=message.chat.id, text='Saved! Add any commentaries? (Да/Нет)')
+    author_question = 'Название получил. Кто же автор? '
+    bot.send_message(chat_id=message.chat.id, text=author_question)
+    bot.set_state(user_id=message.from_user.id, state=SaveBookState.book_author, chat_id=message.chat.id)
 
 
-@bot.message_handler(state=SaveBookState.is_commentary)
-def book_commentary(message: Message) -> None:
-    """Some test commentary"""
-    bot.send_message(chat_id=message.chat.id, text='SaveBookState.is_commentary - is active')
-    if message.text.lower() == 'да':
-        bot.set_state(user_id=message.from_user.id, state=SaveBookState.add_commentary, chat_id=message.chat.id)
+@bot.message_handler(state=SaveBookState.book_author)
+def get_book_author(message: Message) -> None:
+    """Getting and adding the author of the book into our database"""
 
-    elif message.text.lower() == 'нет':
-        bot.delete_state(user_id=message.from_user.id, chat_id=message.chat.id)
-        bot.send_message(chat_id=message.chat.id, text='На нет и суда нет!')
+    last_db_entry = c.execute("""SELECT * FROM read_books ORDER BY id DESC LIMIT 1""")
+    last_title = last_db_entry.fetchall()[0][1]
 
-    #bot.send_message(chat_id=message.chat.id, text='HOMO')
-    #
-    # with open(SAVE_DOC_NAME, 'a+', encoding='utf-8') as book_data:
+    book_author_insertion = """UPDATE read_books SET author = ?
+    WHERE title = ? AND author is 'кто-то'"""
+    author_name = (message.text, last_title)
+    c.execute(book_author_insertion, author_name)
+    conn.commit()
+
+    bot.delete_state(user_id=message.from_user.id, chat_id=message.chat.id)
+
+    question = 'Saved! Add any commentaries?'
+    bot.send_message(chat_id=message.chat.id, text=question, reply_markup=req_yes_no())
+
+
+@bot.callback_query_handler(func=lambda call: True)
+def call_worker(call):
+    if call.data == 'yes':
+        bot.send_message(chat_id=call.from_user.id, text='Bubba works!')
+        bot.set_state(state=SaveBookState.add_commentary, user_id=call.from_user.id)
+    elif call.data == 'no':
+        bot.send_message(chat_id=call.from_user.id, text='На нет и суда нет! ')
+        bot.delete_state(user_id=call.from_user.id)
 
 
 @bot.message_handler(state=SaveBookState.add_commentary)
@@ -53,7 +66,4 @@ def add_commentary(message: Message) -> None:
     """Adding commentaries"""
 
     bot.send_message(chat_id=message.chat.id, text='HOMO')
-
-
-
-
+    bot.delete_state(user_id=message.from_user.id, chat_id=message.chat.id)
