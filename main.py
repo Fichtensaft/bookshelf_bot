@@ -9,4 +9,4 @@ if __name__ == '__main__':
     set_default_commands(bot)
     bot.infinity_polling()
 
-# time_for_aiogramm
+# time for DB many-to-many!

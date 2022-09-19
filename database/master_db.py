@@ -6,41 +6,41 @@ db = sqlite3.connect('bookshelf.db')
 cursor = db.cursor()
 
 
-# Creating a Table - "Read Books"
-# cursor.execute("""CREATE TABLE read_books (
+"""Creating a Table - "Read Books"""
+# cursor.execute("""CREATE TABLE all_users (
 #     id integer PRIMARY KEY,
-#     title text,
+#     user_name text UNIQUE ,
 #     author text DEFAULT 'кто-то'
 # )""")
 
 
-# Удаление таблицы
-# cursor.execute("DROP TABLE read_books")
+"""Удаление таблицы"""
+# cursor.execute("DROP TABLE all_users")
 
-# Добавление в таблицу
+"""Добавление в таблицу"""
 # cursor.execute("INSERT INTO read_books VALUES ('Pasternak', 'Михаил Елизаров')")
 # cursor.execute("INSERT INTO read_books (title) VALUES ('Мы вышли покурить на 17 лет')")
 # cursor.execute("INSERT INTO read_books (author) VALUES ('Михаил Елизаров')")
 
 
-# Добавление в конкретную ячейку конкретной строки таблицы
+"""Добавление в конкретную ячейку конкретной строки таблицы"""
 # cursor.execute("""UPDATE read_books SET author = 'Михаил Елизаров'
 # WHERE title = 'Мы вышли покурить на 17 лет' AND author is null""")
 
 # cursor.execute("""UPDATE read_books SET title = 'Бураттини' WHERE AUTHOR = 'Михаил Елизаров' AND title is null""")
 
-# Комиттинг в таблицу
+"""Комиттинг в таблицу"""
 db.commit()
 
 
-# Выводим все даныне из таблицы (а -> генератор) ///
+"""Выводим все даныне из таблицы (а -> генератор) ///"""
 # a = cursor.execute('SELECT * FROM read_books')
 
-# Выборка данных
+"""Выборка данных"""
 # cursor.execute("SELECT * FROM read_books")
 # print(cursor.fetchall())
 
-# получаем последнее значение
+"""получаем последнее значение"""
 # last_input = cursor.execute("""SELECT * FROM read_books ORDER BY id DESC""")
 # for i in last_input:
 #     print(i)

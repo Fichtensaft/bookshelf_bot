@@ -24,14 +24,18 @@ def write_book_catcher(message: Message) -> None:
 
     # Вывод файлов из SQLite базы данных
     elif message.text == "Books that I've read 📚":
-        all_data = c.execute("SELECT * FROM read_books")
-        all_beauty_books = []
-        for i_book in all_data:
-            beauty_book = f'{i_book[1]},  автор: {i_book[2]}\n'
-            all_beauty_books.append(beauty_book)
-        ready_beauty_books = '\n'.join(all_beauty_books)
-        bot.send_message(chat_id=message.chat.id, text=ready_beauty_books)
-        print(c.fetchall())
+        try:
+            all_data = c.execute("SELECT * FROM read_books")
+            all_beauty_books = []
+            for i_book in all_data:
+                beauty_book = f'{i_book[1]},  автор: {i_book[2]}\n'
+                all_beauty_books.append(beauty_book)
+            ready_beauty_books = '\n'.join(all_beauty_books)
+            bot.send_message(chat_id=message.chat.id, text=ready_beauty_books)
+            print(c.fetchall())
+        # Тут большие и страшные ошибки, хз, поставлю общее ;)
+        except Exception:
+            bot.send_message(chat_id=message.chat.id, text='Список пуст')
 
     # Очистка списка (из .txt-файла, сейчас бесполезна с SQL)
     # elif message.text == "Clear my list 🪓":
